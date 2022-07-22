@@ -4,8 +4,8 @@ class Score
 private:
 	int fontId;
 	double score;
-	double point_x;
-	double point_y;
+	double X;
+	double Y;
 
 public:
 	Score(double x, double y);

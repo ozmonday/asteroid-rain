@@ -1,9 +1,11 @@
 #include <sl.h>
-#include "meteor.h"
+#include "Meteor.h"
 #include "MeteorPool.h"
-#include "spaceship.h"
-#include "healtLevel.h"
+#include "SpaceShip.h"
+#include "HealtLevel.h"
 #include "Score.h"
+#include "MissileStock.h"
+#include <vector>
 
 #define WINDOW_W 420
 #define WINDOW_H 720
@@ -14,15 +16,17 @@ int main() {
 
 	slWindow(WINDOW_W, WINDOW_H, "space ship", 0);
 
-	MeteorPool pooling = MeteorPool(4, 20);
-	spaceship player = spaceship("assets/image/spaceship.png", "assets/image/spaceship_im.png", 59, 118);
-	healtLevel healt = healtLevel("assets/image/helth_level.png", 350, 690, 800, 40);
+	MeteorPool pooling = MeteorPool(5, 35);
+	SpaceShip player = SpaceShip("assets/image/spaceship.png", 59, 59);
+	HealtLevel healt = HealtLevel("assets/image/helth_level.png", 350, 690, 800, 40);
+	MissileStock stock = MissileStock("assets/image/missile_stock.png", 350, 660, 700, 40);
 	Score score = Score(20, 685);
 
-	int thameSong = slLoadWAV("assets/effect/ship_explode.wav");
+	int explode = slLoadWAV("assets/effect/ship_explode.wav");
+	int thameMusic = slLoadWAV("assets/effect/on_my_way.wav");
 	int background = slLoadTexture("assets/image/background.png");
 	double scroll_background = 0.0;
-
+	int sound = slSoundLoop(thameMusic);
 	while (!slShouldClose()) {
 
 		slSetSpriteScroll(0, scroll_background);
@@ -32,42 +36,65 @@ int main() {
 
 
 		if (healt.isGameOver()) {
+			slSoundPause(sound);
 			score.appearLastScore();
 			int restart = slGetKey(SL_KEY_ENTER);
 			if (restart == 1) {
 				pooling.clearMeteors();
+				player.clearMissiles();
 				healt.resetHealt();
 				score.resetScore();
 				player.resetPlayer();
 			}
 		}
 		else {
+			auto missiles = player.getMissiles();
+			std::vector<int> missile_idx;
+
+			slSoundResumeAll();
 			pooling.appearState();
 			player.appear();
 			score.appear();
+			healt.appear();
+			stock.appear();
+
 			player.move();
+			player.shoot();
+			stock.updateStock(player.getAmmunition());
+			player.reload();
 			pooling.changeState();
 			score.changeScore(0.02);
 
-		}
-
-		healt.appear();
-
-		if (!player.getImortal()) {
-			bool bump = pooling.isMeteorBump(player.getPointX(), player.getPointY(), player.getWidth(), player.getHeight());
-			if (bump) {
-				healt.decreaseLevel();
-				player.setImortal(200);
-				int play = slSoundPlay(thameSong);
+			for (size_t i = 0; i < missiles.size(); i++) {
+				int bump = pooling.isMeteorBump(missiles[i]);
+				if (bump != -1) {
+					pooling.deleteMeteor(bump);
+					missile_idx.push_back(i);
+				}
 			}
+
+			for (size_t i = 0; i < missile_idx.size(); i++) {
+				player.missileExplode(missile_idx[i]);
+			}
+
+			if (!player.getImortal()) {
+				int bump = pooling.isMeteorBump(&player);
+				if (bump != -1) {
+					healt.decreaseLevel();
+					player.setImortal(3);
+					int play = slSoundPlay(explode);
+				}
+			}
+			if (scroll_background >= 1) {
+				scroll_background = 0.0;
+			}
+			else
+			{
+				scroll_background += 0.002;
+			}
+
 		}
-		if (scroll_background >= 1) {
-			scroll_background = 0.0;
-		}
-		else
-		{
-			scroll_background += 0.002;
-		}
+
 		slRender();
 	}
 

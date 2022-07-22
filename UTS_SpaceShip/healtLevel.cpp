@@ -1,21 +1,22 @@
-#include "healtLevel.h"
+#include "HealtLevel.h"
+#include "Entity.h"
 #include<sl.h>
 
-healtLevel::healtLevel(const char* filename, double x, double y, double width, double height) : id(slLoadTexture(filename)), position_x(x), position_y(y), w(width), h(height), level(0.0) {
+HealtLevel::HealtLevel(const char* filename, double x, double y, double width, double height) : Entity(filename, x, y, width, height),  level(0.0) {
 
 }
 
-healtLevel::~healtLevel() {}
+HealtLevel::~HealtLevel() {}
 
-void healtLevel::appear() {
+void HealtLevel::appear() {
 	slSetSpriteTiling(0.2, 1);
 	slSetSpriteScroll(level, 0);
-	slSprite(id, position_x, position_y, 90, h-20);
+	slSprite(id, X, Y, 90, height - 20);
 	slSetSpriteScroll(0, 0);
 	slSetSpriteTiling(1, 1);
 }
 
-void healtLevel::decreaseLevel() {
+void HealtLevel::decreaseLevel() {
 	if (level < 0.8) {
 		level += 0.2;
 	}
@@ -25,13 +26,13 @@ void healtLevel::decreaseLevel() {
 	}
 }
 
-bool healtLevel::isGameOver() {
+bool HealtLevel::isGameOver() {
 	if (level == 0.8) {
 		return true;
 	}
 	return false;
 }
 
-void healtLevel::resetHealt() {
+void HealtLevel::resetHealt() {
 	level = 0.0;
 }

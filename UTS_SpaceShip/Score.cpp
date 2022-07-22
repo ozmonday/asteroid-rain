@@ -3,7 +3,7 @@
 #include <string>
 #include <iostream>
 
-Score::Score(double x, double y) : point_x(x), point_y(y), score(0.0), fontId(slLoadFont("assets/font/pixelboy.ttf")) {
+Score::Score(double x, double y) : X(x), Y(y), score(0.0), fontId(slLoadFont("assets/font/pixelboy.ttf")) {
 
 }
 
@@ -17,7 +17,7 @@ void Score::appear() {
 
 	slSetFont(fontId, 22);
 	slSetTextAlign(SL_ALIGN_LEFT);
-	slText(point_x, point_y, scr.c_str());
+	slText(X, Y, scr.c_str());
 
 }
 

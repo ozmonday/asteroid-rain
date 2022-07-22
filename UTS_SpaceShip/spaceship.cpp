@@ -1,112 +1,153 @@
-#include "spaceship.h"
+#include "SpaceShip.h"
+#include "Missile.h"
 #include "sl.h"
+#include <iostream>
+#include <vector>
 
-spaceship::spaceship(const char* filename, const char* fn_imortal, double width, double height) : w(width), h(height), id(slLoadTexture(filename)), id_imortal(slLoadTexture(fn_imortal)), point_x(210), point_y(50), scroll_y(0.0), scroll_y_imortal(0.0), imortal(0) {
-	
+SpaceShip::SpaceShip(const char* filename, double width, double height) : Entity(filename, 210, 50, width, height), scrollX(0.0), imortal(0), aim(false), ammunition(6), timeReload(slGetTime()+15) {
+	MISSILE_SHOOT_SFX = slLoadWAV("assets/effect/missile_shoot.wav");
+	MISSILE_EXPLODE_SFX = slLoadWAV("assets/effect/missile_explode.wav");
 }
 
-spaceship::~spaceship() {
+SpaceShip::~SpaceShip() {
 
 }
 
-void spaceship::appear() {
-	if (imortal > 0) {
-		slSetSpriteTiling(1, 0.1);
-		slSetSpriteScroll(0, scroll_y_imortal);
-		slSprite(id_imortal, point_x, point_y, w, 59);
-		slSetSpriteScroll(0, 0);
-		slSetSpriteTiling(1, 1);
-		if (scroll_y_imortal == 1) {
-			scroll_y_imortal = 0.0;
-		}
-		else
-		{
-			scroll_y_imortal += 0.1;
-		}
-		imortal--;
-	}
-	else
-	{
-		slSetSpriteTiling(1, 0.5);
-		slSetSpriteScroll(0, scroll_y);
-		slSprite(id, point_x, point_y, w, h - 59);
-		slSetSpriteScroll(0, 0);
-		slSetSpriteTiling(1, 1);
-		if (scroll_y == 1) {
-			scroll_y = 0.0;
-		}
-		else
-		{
-			scroll_y += 0.5;
+void SpaceShip::appear() {
+	double time = slGetTime();
+
+	if (missiles.size() > 0) {
+		for (size_t i = 0; i < missiles.size(); i++) {
+			missiles[i]->appear();
 		}
 	}
 
-}
-
-bool spaceship::isBump(double x, double y) {
-	if (point_x == x && point_y == y) {
-		return true;
+	slSetSpriteTiling(0.25, 0.5);
+	if (time < imortal) {
+		slSetSpriteScroll(scrollX, 0);
 	}
-	return false;
+	else {
+		slSetSpriteScroll(scrollX, 0.5);
+	}
+
+	slSprite(id, X, Y, width, height);
+	slSetSpriteScroll(0, 0);
+	slSetSpriteTiling(1, 1);
+	if (scrollX == 1) {
+		scrollX = 0.0;
+	}
+	else {
+		scrollX += 0.25;
+	}
+
+
 }
 
-void spaceship::move() {
+
+void SpaceShip::move() {
 
 	if (slGetKey(SL_KEY_UP) == 1) {
-		if (point_y < 690.5) {
-			point_y += 1.5;
+		if (Y < 690.5) {
+			Y += 1.5;
 		}
 	}
 
 	if (slGetKey(SL_KEY_DOWN) == 1) {
-		if (point_y > 29.5) {
-			point_y -= 1.5;
+		if (Y > 29.5) {
+			Y -= 1.5;
 		}
 	}
 
 	if (slGetKey(SL_KEY_LEFT) == 1) {
-		if (point_x > 29.5) {
-			point_x -= 1.5;
+		if (X > 29.5) {
+			X -= 1.5;
 		}
 	}
 
 	if (slGetKey(SL_KEY_RIGHT) == 1) {
-		if (point_x < 390.5) {
-			point_x += 1.5;
+		if (X < 390.5) {
+			X += 1.5;
 		}
 	}
 
+	if (missiles.size() > 0) {
+		for (size_t i = 0; i < missiles.size(); i++) {
+			if (missiles[i]->getY() > 752) {
+				delete missiles[i];
+				missiles.erase(missiles.begin() + i);
+			}
+			else
+			{
+				missiles[i]->move();
+			}
+		}
+	}
 }
 
-double spaceship::getPointX() {
-	return point_x;
-}
 
-double spaceship::getPointY() {
-	return point_y;
-}
 
-double spaceship::getWidth() {
-	return w;
-}
-
-double spaceship::getHeight() {
-	return h/2.0;
-}
-
-bool spaceship::getImortal() {
-	if (imortal > 0) {
+bool SpaceShip::getImortal() {
+	if (imortal > slGetTime()) {
 		return true;
 	}
 	return false;
 }
 
-void spaceship::setImortal(int time_duration) {
-	imortal = time_duration;
+void SpaceShip::setImortal(int time_duration) {
+	imortal = slGetTime()  + time_duration;
 }
 
-void spaceship::resetPlayer() {
-	point_x = 210;
-	point_y = 50;
-	imortal = 0;
+void SpaceShip::resetPlayer() {
+	X = 210;
+	Y = 50;
+	imortal = slGetTime() + 3;
+	ammunition = 6;
+}
+
+void SpaceShip::shoot() {
+	if (slGetMouseButton(SL_MOUSE_BUTTON_LEFT) == 1) {
+		aim = true;
+	}
+
+	if (aim == true && slGetMouseButton(SL_MOUSE_BUTTON_LEFT) == 0) {
+		if (ammunition > 0) {
+			slSoundPlay(MISSILE_SHOOT_SFX);
+			missiles.push_back(new Missile(X, Y, 0, 1));
+			ammunition -= 1;
+		}
+		aim = false;
+	}
+}
+
+void SpaceShip::reload() {
+	if (slGetTime() >= timeReload) {
+		if (ammunition < 6) {
+			ammunition += 1;
+		}
+		timeReload = slGetTime() + 15;
+	}
+}
+
+
+void SpaceShip::missileExplode(int index) {
+	slSoundPlay(MISSILE_EXPLODE_SFX);
+	delete missiles[index];
+	missiles.erase(missiles.begin() + index);
+}
+
+std::vector<Missile*> SpaceShip::getMissiles() {
+	return missiles;
+}
+
+
+void SpaceShip::clearMissiles() {
+	for (size_t i = 0; i < missiles.size(); i++) {
+		delete missiles[i];
+	}
+
+	missiles.clear();
+}
+
+int SpaceShip::getAmmunition() {
+	return ammunition;
 }

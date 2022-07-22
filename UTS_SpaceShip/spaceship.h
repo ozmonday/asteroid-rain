@@ -1,30 +1,41 @@
 #pragma once
-class spaceship
+
+#include "Entity.h"
+#include "Missile.h"
+#include <vector>
+
+class SpaceShip: public Entity
 {
 private:
-	int id;
-	int id_imortal;
-	double point_x;
-	double point_y;
-	double scroll_y;
-	double scroll_y_imortal;
-	double w;
-	double h;
+	std::vector<Missile*> missiles;
+	double scrollX;
+	double timeReload;
+	bool aim;
 	int imortal;
+	int ammunition;
+
+	int MISSILE_SHOOT_SFX;
+	int MISSILE_EXPLODE_SFX;
 
 public:
-	spaceship(const char *filename, const char *fn_imortal, double width, double height);
-	~spaceship();
+	SpaceShip(const char *filename, double width, double height);
+	~SpaceShip();
 
 	void move();
 	void appear();
-	bool isBump(double x, double y);
-	double getPointY();
-	double getPointX();
-	double getHeight();
-	double getWidth();
+
+	
 	bool getImortal();
+	int getAmmunition();
 	void setImortal(int time_duration);
 	void resetPlayer();
+	void shoot();
+	void reload();
+
+	std::vector<Missile*> getMissiles();
+
+	void missileExplode(int index);
+
+	void clearMissiles();
 };
 

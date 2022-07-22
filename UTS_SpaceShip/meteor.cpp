@@ -1,40 +1,26 @@
-#include "meteor.h"
+#include "Meteor.h"
 #include "sl.h"
 
 
-meteor::meteor(const char* filename, double width, double height, double x, double y, double speed_x, double speed_y) : id(slLoadTexture(filename)), w(width), h(height), point_x(x), point_y(y), speed_x(speed_x), speed_y(speed_y) {
+Meteor::Meteor(const char* filename, double width, double height, double x, double y, double speed_x, double speed_y) : Entity(filename, x, y, width, height), speed_x(speed_x), speed_y(speed_y) {
 
 }
 
-meteor::~meteor() {
+Meteor::~Meteor() {
 }
 
-void meteor::appear() {
-	slSprite(id, point_x, point_y, w, h);
+
+void Meteor::move() {
+	changePosition(X - speed_x, Y - speed_y);
 }
 
-void meteor::move() {
-	point_x -= speed_x;
-	point_y -= speed_y;
+void Meteor::changeDirection(double s_x, double s_y) {
+	speed_x = s_x;
+	speed_y = s_y;
 }
 
-void meteor::changeDirection(double sx, double sy) {
-	speed_x = sx;
-	speed_y = sy;
+
+double Meteor::getSpeedY() {
+	return speed_y;
 }
 
-double meteor::getPositionY() {
-	return point_y;
-}
-
-double meteor::getPositionX() {
-	return point_x;
-}
-
-double meteor::getWidth() {
-	return w;
-}
-
-double meteor::getHeight() {
-	return h;
-}

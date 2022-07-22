@@ -1,18 +1,14 @@
 #pragma once
+#include "Entity.h"
 
-class healtLevel
+class HealtLevel: public Entity
 {
 private:
-	int id;
-	double position_x;
-	double position_y;
-	double w;
-	double h;
 	double level;
 
 public:
-	healtLevel(const char* filename, double x, double y, double width, double height);
-	~healtLevel();
+	HealtLevel(const char* filename, double x, double y, double width, double height);
+	~HealtLevel();
 	void appear();
 	bool isGameOver();
 	void decreaseLevel();

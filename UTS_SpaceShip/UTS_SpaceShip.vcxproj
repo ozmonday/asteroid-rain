@@ -148,19 +148,25 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="healtLevel.cpp" />
+    <ClCompile Include="Entity.cpp" />
+    <ClCompile Include="HealtLevel.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="meteor.cpp" />
+    <ClCompile Include="Meteor.cpp" />
     <ClCompile Include="MeteorPool.cpp" />
+    <ClCompile Include="Missile.cpp" />
+    <ClCompile Include="MissileStock.cpp" />
     <ClCompile Include="Score.cpp" />
-    <ClCompile Include="spaceship.cpp" />
+    <ClCompile Include="SpaceShip.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="healtLevel.h" />
-    <ClInclude Include="meteor.h" />
+    <ClInclude Include="Entity.h" />
+    <ClInclude Include="HealtLevel.h" />
+    <ClInclude Include="Meteor.h" />
     <ClInclude Include="MeteorPool.h" />
+    <ClInclude Include="Missile.h" />
+    <ClInclude Include="MissileStock.h" />
     <ClInclude Include="Score.h" />
-    <ClInclude Include="spaceship.h" />
+    <ClInclude Include="SpaceShip.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

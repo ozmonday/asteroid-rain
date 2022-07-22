@@ -1,20 +1,20 @@
 #include "MeteorPool.h"
-#include "meteor.h"
+#include "Meteor.h"
 #include <algorithm>
+#include <vector>
+#include <iostream>
+#include "sl.h"
 
 
-MeteorPool::MeteorPool(int init_size, int capacity) : capacity(capacity) {
+MeteorPool::MeteorPool(int init_size, int capacity) : capacity(capacity), start(slGetTime()) {
 	for (int i = 0; i < init_size; i++) {
-		double speed_y = rand() % 4;
+		double speed_y = rand() % 10;
 		if (speed_y < 1) {
-			speed_y = 1.5;
+			speed_y = 2;
 		}
 
-		double position_x = rand() % 399;
-		if (position_x <= 21) {
-			position_x = 21;
-		}
-		pool.push_back(new meteor("assets/image/meteor_1.png", 42, 42, position_x, 762, 0, speed_y));
+		int index = rand() % 10;
+		pool.push_back(new Meteor("assets/image/meteor_1.png", 42, 42, cordinat[index], 762, 0, speed_y));
 	}
 }
 
@@ -34,74 +34,98 @@ void MeteorPool::changeState() {
 		if (speed_y < 1) {
 			speed_y = 1.5;
 		}
-		double position_x = rand() % 399;
-		if (position_x <= 21) {
-			position_x = 21;
-		}
-		pool.push_back(new meteor("assets/image/meteor_1.png", 42, 42, position_x, 762, 0, speed_y));
-	}
-	for (size_t i = 0; i < pool.size(); i++) {
-		pool[i]->move();
+
+		int index = rand() % 10;
+		pool.push_back(new Meteor("assets/image/meteor_1.png", 42, 42, cordinat[index], 762, 0, speed_y));
 	}
 
-	deleteState();
-
-}
-
-void MeteorPool::deleteState() {
 	for (size_t i = 0; i < pool.size(); i++) {
-	
-		if (pool[i]->getPositionY() < -42) {
+		if (pool[i]->getY() < -42) {
 			delete pool[i];
 			pool.erase(pool.begin() + i);
 		}
+		else
+		{
+			pool[i]->move();
+		}
+	}
+	std::vector<bump> idx;
+	for (size_t i = 0; i < pool.size(); i++) {
+		for (size_t y = 0; y < pool.size(); y++) {
+			if (i == y || pool[i]->getSpeedY() == pool[y]->getSpeedY()) {
+				continue;
+			}
+			else
+			{
+				if (pool[i]->isBump(pool[y], 0.1)) {
+					bool skip = false;
+					bump c;
+					c.one = i;
+					c.two = y;
+					for (size_t d = 0; d < idx.size(); d++) {
+						if (idx[d].one == c.two && idx[d].two == c.one) {
+							skip = true;
+						}
+					}
+					if (!skip) {
+						idx.push_back(c);
+						//std::cout << i << " bertumbukan " << y << std::endl;
+					}
+				}
+			}
+		}
+	}
+
+
+	for (size_t ix = 0; ix < idx.size(); ix++) {
+		int idxFaster;
+		if (pool[idx[ix].one]->getSpeedY() > pool[idx[ix].two]->getSpeedY()) {
+			idxFaster = idx[ix].one;
+		}
+		else
+		{
+			idxFaster = idx[ix].two;
+		}
+
+		double speed = pool[idxFaster]->getSpeedY() * 0.5;
+		if (idx[ix].one == idxFaster) {
+			double s = pool[idx[ix].one]->getSpeedY() - speed;
+			pool[idx[ix].one]->changeDirection(0, s);
+		}
+		else
+		{
+			double s = pool[idx[ix].one]->getSpeedY() + speed;
+			pool[idx[ix].one]->changeDirection(0, s);
+		}
+
+		if (idx[ix].two == idxFaster) {
+			double s = pool[idx[ix].two]->getSpeedY() - speed;
+			pool[idx[ix].two]->changeDirection(0, s);
+		}
+		else
+		{
+			double s = pool[idx[ix].two]->getSpeedY() + speed;
+			pool[idx[ix].two]->changeDirection(0, s);
+		}
 	}
 }
 
-bool MeteorPool::isMeteorBump(double x, double y, double w, double h) {
 
-	double max_x = x + (w / 2.0);
-	double max_y = y + (h / 2.0);
-	double min_x = x - (w / 2.0);
-	double min_y = y - (h / 2.0);
-	double box1[4] = { min_x, min_y, max_x, max_y };
-	double box1_area = std::abs(w) * std::abs(h);
+int MeteorPool::isMeteorBump(Entity *entity) {
 
 	for (size_t i = 0; i < pool.size(); i++) {
 
-		if (pool[i]->getPositionY() <= 22) {
+		if (pool[i]->getY() <= 22) {
 			continue;
 		}
 
-		double max_xas = pool[i]->getPositionX() + (pool[i]->getWidth() / 2.0);
-		double max_yas = pool[i]->getPositionY() + (pool[i]->getHeight() / 2.0);
-		double min_xas = pool[i]->getPositionX() - (pool[i]->getWidth() / 2.0);
-		double min_yas = pool[i]->getPositionY() - (pool[i]->getHeight() / 2.0);
-
-		double box2[4] = { min_xas, min_yas, max_xas, max_yas };
-		double box2_area = std::abs(pool[i]->getWidth()) * std::abs(pool[i]->getHeight());
-
-		double x_inter1 = std::max(box1[0], box2[0]);
-		double y_inter1 = std::max(box1[1], box2[1]);
-		double x_inter2 = std::min(box1[2], box2[2]);
-		double y_inter2 = std::min(box1[3], box2[3]);
-
-
-		double width_inter = std::max(0.0, x_inter2 - x_inter1);
-		double height_inter = std::max(0.0, y_inter2 - y_inter1);
-
-		double area_inter = width_inter * height_inter;
-		double area_union = (box1_area + box2_area) - area_inter;
-
-		double iou = area_inter / area_union;
-
-		if (iou >= 0.15) {
-			return true;
+		if (pool[i]->isBump(entity, 0.15)) {
+			return i;
 		}		
 			
 	}
 
-	return false;
+	return -1;
 }
 
 void MeteorPool::clearMeteors() {
@@ -109,4 +133,10 @@ void MeteorPool::clearMeteors() {
 		delete pool[i];
 	}
 	pool.clear();
+}
+
+
+void MeteorPool::deleteMeteor(int index) {
+	delete pool[index];
+	pool.erase(pool.begin() + index);
 }
